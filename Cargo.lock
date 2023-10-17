@@ -135,6 +135,55 @@ dependencies = [
 ]
 
 [[package]]
+name = "arceos-sched-test1-1-fairness-equal"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
+name = "arceos-sched-test1-2-fairness-unequal"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
+name = "arceos-sched-test1-3-fairness-unbalance"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
+name = "arceos-sched-test1-3-yield-speed"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
+name = "arceos-sched-test2-realtime"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
+name = "arceos-sched-test3-occupy"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
+name = "arceos-sched-test5-static"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
 name = "arceos-shell"
 version = "0.1.0"
 dependencies = [
@@ -226,6 +275,12 @@ version = "0.1.0"
 dependencies = [
  "tock-registers",
 ]
+
+[[package]]
+name = "array-init"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f30bbe2f5e3d117f55bd8c7a1f9191e4a5deba9f15f595bbea4f670c59c765db"
 
 [[package]]
 name = "atomic-polyfill"
@@ -488,13 +543,17 @@ dependencies = [
 name = "axtask"
 version = "0.1.0"
 dependencies = [
+ "array-init",
  "axconfig",
  "axhal",
+ "axlog",
  "axtask",
  "cfg-if",
  "crate_interface",
  "kernel_guard",
  "lazy_init",
+ "lazy_static",
+ "load_balance_manager",
  "log",
  "memory_addr",
  "percpu",
@@ -1207,6 +1266,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57bcfdad1b858c2db7c38303a6d2ad4dfaf5eb53dfeb0910128b2c26d6158503"
 
 [[package]]
+name = "load_balance_manager"
+version = "0.1.0"
+dependencies = [
+ "axhal",
+ "axlog",
+ "cfg-if",
+ "chrono",
+ "crate_interface",
+ "linked_list",
+ "log",
+ "scheduler",
+ "spinlock",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1649,7 +1723,14 @@ dependencies = [
 name = "scheduler"
 version = "0.1.0"
 dependencies = [
+ "axhal",
+ "axlog",
+ "cfg-if",
+ "chrono",
+ "crate_interface",
  "linked_list",
+ "log",
+ "spinlock",
 ]
 
 [[package]]
