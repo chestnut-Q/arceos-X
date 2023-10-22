@@ -135,6 +135,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "arceos-sched-fairness-equal"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
 name = "arceos-shell"
 version = "0.1.0"
 dependencies = [

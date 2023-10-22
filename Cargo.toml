@@ -70,6 +70,7 @@ members = [
     "apps/task/yield",
     "apps/task/priority",
     "apps/task/tls",
+    "apps/task/sched_fairness_equal",
 ]
 
 [profile.release]

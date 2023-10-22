@@ -133,6 +133,9 @@ pub mod task {
         /// The maximum number of tasks to wake up is specified by `count`. If
         /// `count` is `u32::MAX`, it will wake up all tasks in the wait queue.
         pub fn ax_wait_queue_wake(wq: &AxWaitQueueHandle, count: u32);
+        /// Blocks the current task and put it into the wait queue, until other tasks
+        /// notify it, or the given duration has elapsed.
+        pub fn ax_wait_timeout(wq: &AxWaitQueueHandle, timeout: core::time::Duration) -> bool;
     }
 }
 
