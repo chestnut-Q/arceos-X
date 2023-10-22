@@ -41,9 +41,6 @@ multitask = ["arceos_api/multitask", "axfeat/multitask"]
 sched_fifo = ["axfeat/sched_fifo"]
 sched_rr = ["axfeat/sched_rr"]
 sched_cfs = ["axfeat/sched_cfs"]
-sched_sjf = ["axfeat/sched_sjf"]
-sched_mlfq = ["axfeat/sched_mlfq"]
-sched_rms = ["axfeat/sched_rms"]
 
 # File system
 fs = ["arceos_api/fs", "axfeat/fs"]
