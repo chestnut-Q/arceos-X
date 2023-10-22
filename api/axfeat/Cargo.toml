@@ -34,9 +34,6 @@ multitask = ["alloc", "axtask/multitask", "axsync/multitask", "axruntime/multita
 sched_fifo = ["axtask/sched_fifo"]
 sched_rr = ["axtask/sched_rr", "irq"]
 sched_cfs = ["axtask/sched_cfs", "irq"]
-sched_sjf = ["axtask/sched_sjf", "irq"]
-sched_mlfq = ["axtask/sched_mlfq", "irq"]
-sched_rms = ["axtask/sched_rms", "irq"]
 
 # File system
 fs = ["alloc", "paging", "axdriver/virtio-blk", "dep:axfs", "axruntime/fs"] # TODO: try to remove "paging"
