@@ -6,14 +6,14 @@
 
 # RUN
 ```shell
-make A=apps/task/sched-fairness-equal LOG=info APP_FEATURES=sched_cfs run
+make A=apps/task/sched_fairness_equal LOG=info PLATFORM=riscv64-qemu-virt APP_FEATURES=sched_cfs run
 
 Other choises of APP_FEATURES: sched_rr, sched_fifo, sched_mlfq, sched_sjf
 ```
 
 ## Using multicore
 ```shell
-make A=apps/task/sched-fairness-equal LOG=info APP_FEATURES=... SMP=4 run
+make A=apps/task/sched_fairness_equal LOG=info APP_FEATURES=... SMP=4 run
 ```
 
 # RESULT

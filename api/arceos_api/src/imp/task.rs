@@ -108,4 +108,11 @@ cfg_task! {
             }
         }
     }
+
+    pub fn ax_wait_timeout(wq: &AxWaitQueueHandle, timeout: core::time::Duration) -> bool {
+        axlog::info!("ax_wait_timeout: timeout = {:?}", timeout);
+        #[cfg(feature = "irq")] 
+        return wq.0.wait_timeout(timeout);
+        false
+    }
 }
