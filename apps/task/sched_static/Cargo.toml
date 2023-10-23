@@ -7,7 +7,7 @@ authors = ["Haoxing Ye <yehx20@mails.tsinghua.edu.cn>", "Ruoyu Qin <qry19@mails.
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["axstd?/default"]
+default = ["axstd?/sched_rms"]
 
 [dependencies]
-axstd = { path = "../../../ulib/axstd", features = ["alloc", "paging", "multitask", "irq"], optional = true }
+axstd = { path = "../../../ulib/axstd", features = ["alloc", "paging", "multitask", "irq", "sched_rms"], optional = true }
