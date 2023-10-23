@@ -2,42 +2,22 @@
 
 | App | Extra modules | Enabled features | Description |
 |-|-|-|-|
-| [sched-realtime](../apps/task/sched-realtime/) | axalloc, axtask | alloc, paging, multitask, sched_rr, sched_fifo, sched_mlfq, sched_sjf, sched_cfs | schedule test short payload & yield|
+| [sched_realtime](../apps/task/sched_realtime/) | axalloc, axtask | alloc, paging, multitask, irq, sched_rr, sched_fifo, sched_mlfq, sched_sjf, sched_cfs | schedule test short payload & yield|
 
 # RUN
-## CFS
-First, modify the dependencies in Cargo.toml:
-```
-...
-[dependencies]
-libax = { path = "../../../ulib/libax", default-features = false, features = ["alloc", "paging", "multitask", "sched_cfs"] }
-```
-Then make the code.
 ```shell
-make A=apps/task/sched-realtime LOG=info APP_FEATURES=sched_cfs run
-```
-## Other choises
-
-First, modify the dependencies in Cargo.toml:
-```
-...
-[dependencies]
-libax = { path = "../../../ulib/libax", default-features = false, features = ["alloc", "paging", "multitask"] }
-```
-Then make the code.
-```shell
-make A=apps/task/sched-realtime LOG=info APP_FEATURES=sched_rr run
+make A=apps/task/sched_realtime ARCH=riscv64 PLATFORM=riscv64-qemu-virt LOG=info APP_FEATURES=sched_cfs run
 Other choises of APP_FEATURES: sched_fifo, sched_mlfq, sched_sjf
 ```
 
 ## Using multicore
 ```shell
-make A=apps/task/sched-realtime LOG=info APP_FEATURES=... SMP=4 run
+make A=apps/task/sched_-_realtime LOG=info APP_FEATURES=... SMP=4 run
 ```
 
 # RESULT
 ```
-make A=apps/task/sched-realtime LOG=info APP_FEATURES=sched_mlfq SMP=4 run
+make A=apps/task/sched_realtime LOG=info APP_FEATURES=sched_mlfq SMP=4 run
 ...
 part 4: TaskId(7) [0, 8)
 part 3: TaskId(8) [0, 500000)

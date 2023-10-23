@@ -2,23 +2,23 @@
 
 | App | Extra modules | Enabled features | Description |
 |-|-|-|-|
-| [sched-occupy](../apps/task/sched-occupy/) | axalloc, axtask | alloc, paging, multitask, sched_fifo | short tasks occupy long tasks test|
+| [sched_occupy](../apps/task/sched_occupy/) | axalloc, axtask | alloc, paging, multitask, irq, sched_fifo | short tasks occupy long tasks test|
 
 # RUN
 ```shell
-make A=apps/task/sched-occupy LOG=info APP_FEATURES=sched_cfs run
+make A=apps/task/sched_occupy ARCH=riscv64 PLATFORM=riscv64-qemu-virt LOG=info APP_FEATURES=sched_cfs run
 
 Other choises of APP_FEATURES: sched_rr, sched_fifo, sched_mlfq, sched_sjf
 ```
 
 ## Using multicore
 ```shell
-make A=apps/task/sched-occupy LOG=info APP_FEATURES=... SMP=4 run
+make A=apps/task/sched_occupy LOG=info APP_FEATURES=... SMP=4 run
 ```
 
 # RESULT
 ```
-make A=apps/task/sched-occupy LOG=info APP_FEATURES=sched_mlfq SMP=4 run
+make A=apps/task/sched_occupy LOG=info APP_FEATURES=sched_mlfq SMP=4 run
 ...
 part 3: TaskId(8) [0, 2000000)
 part 4: TaskId(7) [0, 80)

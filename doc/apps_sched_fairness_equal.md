@@ -2,7 +2,7 @@
 
 | App | Extra modules | Enabled features | Description |
 |-|-|-|-|
-| [sched_fairness_equal](../apps/task/sched_fairness_equal/) | axalloc, axtask | alloc, paging, multitask, sched_rr, sched_fifo, sched_mlfq, sched_sjf, sched_cfs | schedule test equal payload|
+| [sched_fairness_equal](../apps/task/sched_fairness_equal/) | axalloc, axtask | alloc, multitask, irq, sched_rr, sched_fifo, sched_mlfq, sched_sjf, sched_cfs | schedule test equal payload|
 
 # RUN
 ```shell

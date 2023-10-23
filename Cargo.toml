@@ -71,6 +71,12 @@ members = [
     "apps/task/priority",
     "apps/task/tls",
     "apps/task/sched_fairness_equal",
+    "apps/task/sched_fairness_unbalance",
+    "apps/task/sched_fairness_unequal",
+    "apps/task/sched_occupy",
+    "apps/task/sched_realtime",
+    "apps/task/sched_static",
+    "apps/task/sched_yield_speed",
 ]
 
 [profile.release]

@@ -2,15 +2,15 @@
 
 | App | Extra modules | Enabled features | Description |
 |-|-|-|-|
-| [sched-static](../apps/task/sched-static/) | axalloc, axtask | alloc, paging, multitask, sched_rms | schedule test short payload & yield|
+| [sched_static](../apps/task/sched_static/) | axalloc, axtask | alloc, paging, multitask, irq | schedule test short payload & yield|
 
 # RUN
 ```shell
-make A=apps/task/sched-static LOG=info run
+make A=apps/task/sched_static ARCH=riscv64 PLATFORM=riscv64-qemu-virt LOG=info run
 
 ## Using multicore
 ```shell
-make A=apps/task/sched-static LOG=info SMP=3 run
+make A=apps/task/sched_static LOG=info SMP=3 run
 ```
 
 # RESULT
