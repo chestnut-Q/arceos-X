@@ -5,6 +5,9 @@
 //! - [`FifoScheduler`]: FIFO (First-In-First-Out) scheduler (cooperative).
 //! - [`RRScheduler`]: Round-robin scheduler (preemptive).
 //! - [`CFScheduler`]: Completely Fair Scheduler (preemptive).
+//! - [`RMScheduler`]: Rate Monotonic Scheduler.
+//! - [`MLFQScheduler`]: Multi-Level Feedback Queue Scheduler.
+//! - [`SJFScheduler`]: Shortest Job First Scheduler.
 
 #![cfg_attr(not(test), no_std)]
 #![feature(const_mut_refs)]
@@ -12,15 +15,24 @@
 mod cfs;
 mod fifo;
 mod round_robin;
+mod rms;
+mod mlfq;
+mod sjf;
 
 #[cfg(test)]
 mod tests;
+
+mod utils;
+pub use utils::timer::current_ticks;
 
 extern crate alloc;
 
 pub use cfs::{CFSTask, CFScheduler};
 pub use fifo::{FifoScheduler, FifoTask};
 pub use round_robin::{RRScheduler, RRTask};
+pub use rms::{RMSTask, RMScheduler};
+pub use mlfq::{MLFQTask, MLFQScheduler};
+pub use sjf::{SJFTask, SJFScheduler};
 
 /// The base scheduler trait that all schedulers should implement.
 ///
