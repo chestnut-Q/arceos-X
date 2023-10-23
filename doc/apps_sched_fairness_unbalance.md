@@ -2,36 +2,91 @@
 
 | App | Extra modules | Enabled features | Description |
 |-|-|-|-|
-| [sched_fairness_unequal](../apps/task/sched_fairness_unequal/) | axalloc, axtask | alloc, paging, multitask, irq, sched_rr, sched_fifo, sched_mlfq, sched_sjf, sched_cfs | schedule test unequal payload|
+| [sched_fairness_unbalance](../apps/task/sched_fairness_unbalance/) | axalloc, axtask | alloc, paging, multitask, rand, irq,  sched_rr, sched_fifo, sched_mlfq, sched_sjf, sched_cfs | schedule test unbalance payload|
 
 # RUN
 ```shell
-make A=apps/task/sched_fairness_unequal ARCH=riscv64 PLATFORM=riscv64-qemu-virt LOG=info APP_FEATURES=sched_cfs run
+make A=apps/task/sched_fairness_unbalance ARCH=riscv64 PLATFORM=riscv64-qemu-virt LOG=info APP_FEATURES=sched_cfs run
 
 Other choises of APP_FEATURES: sched_rr, sched_fifo, sched_mlfq, sched_sjf
 ```
 
 ## Using multicore
 ```shell
-make A=apps/task/sched_fairness_unequal LOG=info APP_FEATURES=... SMP=4 run
+make A=apps/task/sched_fairness_unbalance LOG=info APP_FEATURES=... SMP=4 run
 ```
 
 # RESULT
 ```
-make A=apps/task/sched_fairness_unequal LOG=info APP_FEATURES=sched_mlfq SMP=4 run
+make A=apps/task/sched_fairness_unbalance ARCH=riscv64 PLATFORM=riscv64-qemu-virt LOG=info APP_FEATURES=sched_cfs run
 ...
-part 0: TaskId(7) [0, 5000)
-part 1: TaskId(8) [5000, 10000)
-part 2: TaskId(9) [10000, 15000)
-part 3: TaskId(10) [15000, 20000)
-main task woken up! timeout=true
-id 0, calc times = 65
-id 1, calc times = 31
-id 2, calc times = 21
-id 3, calc times = 16
+part 0: ThreadId(4) [0, 1)
+part 1: ThreadId(5) [0, 5)
+part 2: ThreadId(6) [0, 9)
+part 3: ThreadId(7) [0, 13)
+part 4: ThreadId(8) [0, 1)
+part 5: ThreadId(9) [0, 5)
+part 6: ThreadId(10) [0, 9)
+part 7: ThreadId(11) [0, 13)
+part 8: ThreadId(12) [0, 1)
+part 9: ThreadId(13) [0, 5)
+part 10: ThreadId(14) [0, 9)
+part 11: ThreadId(15) [0, 13)
+part 12: ThreadId(16) [0, 1)
+part 13: ThreadId(17) [0, 5)
+part 14: ThreadId(18) [0, 9)
+part 15: ThreadId(19) [0, 13)
+part 16: ThreadId(20) [0, 1)
+part 17: ThreadId(21) [0, 5)
+part 18: ThreadId(22) [0, 9)
+part 19: ThreadId(23) [0, 13)
+part 15: ThreadId(19) finished
+part 0: ThreadId(4) finished
+part 8: ThreadId(12) finished
+part 12: ThreadId(16) finished
+part 16: ThreadId(20) finished
+part 4: ThreadId(8) finished
+part 1: ThreadId(5) finished
+part 5: ThreadId(9) finished
+part 9: ThreadId(13) finished
+part 17: ThreadId(21) finished
+part 13: ThreadId(17) finished
+part 2: ThreadId(6) finished
+part 14: ThreadId(18) finished
+part 18: ThreadId(22) finished
+part 10: ThreadId(14) finished
+part 6: ThreadId(10) finished
+part 7: ThreadId(11) finished
+part 3: ThreadId(7) finished
+part 11: ThreadId(15) finished
+part 19: ThreadId(23) finished
+leave time id 0 = 627ms
+leave time id 1 = 2469ms
+leave time id 2 = 3590ms
+leave time id 3 = 4290ms
+leave time id 4 = 849ms
+leave time id 5 = 2430ms
+leave time id 6 = 3749ms
+leave time id 7 = 4229ms
+leave time id 8 = 609ms
+leave time id 9 = 2399ms
+leave time id 10 = 3709ms
+leave time id 11 = 4210ms
+leave time id 12 = 590ms
+leave time id 13 = 2470ms
+leave time id 14 = 3550ms
+leave time id 15 = 4181ms
+leave time id 16 = 579ms
+leave time id 17 = 2340ms
+leave time id 18 = 3550ms
+leave time id 19 = 4142ms
+main task woken up! timeout=false
+maximum leave time = 4290ms
 Parallel summation tests run OK!
 ```
 # PROCESS
+
+# TODO
 
 ### 各算法参数设置
 

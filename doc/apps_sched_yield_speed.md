@@ -2,23 +2,23 @@
 
 | App | Extra modules | Enabled features | Description |
 |-|-|-|-|
-| [sched-yield-speed](../apps/task/sched-yield-speed/) | axalloc, axtask | alloc, paging, multitask, sched_rr, sched_fifo, sched_mlfq, sched_sjf, sched_cfs | schedule test short payload & yield|
+| [sched_yield_speed](../apps/task/sched_yield_speed/) | axalloc, axtask | alloc, paging, multitask, irq, sched_rr, sched_fifo, sched_mlfq, sched_sjf, sched_cfs | schedule test short payload & yield|
 
 # RUN
 ```shell
-make A=apps/task/sched-yield-speed LOG=info APP_FEATURES=sched_cfs run
+make A=apps/task/sched_yield_speed ARCH=riscv64 PLATFORM=riscv64-qemu-virt LOG=info APP_FEATURES=sched_cfs run
 
 Other choises of APP_FEATURES: sched_rr, sched_fifo, sched_mlfq, sched_sjf
 ```
 
 ## Using multicore
 ```shell
-make A=apps/task/sched-yield-speed LOG=info APP_FEATURES=... SMP=4 run
+make A=apps/task/sched_yield_speed LOG=info APP_FEATURES=... SMP=4 run
 ```
 
 # RESULT
 ```
-make A=apps/task/sched-yield-speed LOG=info APP_FEATURES=sched_mlfq SMP=4 run
+make A=apps/task/sched_yield_speed LOG=info APP_FEATURES=sched_mlfq SMP=4 run
 ...
 part 0: TaskId(7) [0, 100000)
 part 1: TaskId(8) [100000, 200000)

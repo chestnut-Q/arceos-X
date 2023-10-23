@@ -1,0 +1,18 @@
+[package]
+name = "arceos-sched-fairness-unbalance"
+version = "0.1.0"
+edition = "2021"
+authors = ["Haoxing Ye <yehx20@mails.tsinghua.edu.cn>", "Ruoyu Qin <qry19@mails.tsinghua.edu.cn>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+preempt = ["axstd?/sched_rr"]
+default = ["axstd?/default"]
+sched_rr = ["axstd?/sched_rr"]
+sched_cfs = ["axstd?/sched_cfs"]
+sched_fifo = ["axstd?/sched_fifo"]
+
+[dependencies]
+rand = { version = "0.8", default-features = false, features = ["small_rng"] }
+axstd = { path = "../../../ulib/axstd", features = ["alloc", "paging", "multitask", "irq"], optional = true }

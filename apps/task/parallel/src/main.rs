@@ -49,7 +49,7 @@ fn sqrt(n: &u64) -> u64 {
 
 #[cfg_attr(feature = "axstd", no_mangle)]
 fn main() {
-    let mut rng = SmallRng::seed_from_u64(0xdead_beef);
+    let mut rng: SmallRng = SmallRng::seed_from_u64(0xdead_beef);
     let vec = Arc::new(
         (0..NUM_DATA)
             .map(|_| rng.next_u32() as u64)
@@ -70,7 +70,7 @@ fn main() {
 
     let mut tasks = Vec::with_capacity(NUM_TASKS);
     for i in 0..NUM_TASKS {
-        let vec = vec.clone();
+        let vec: Arc<Vec<u64>> = vec.clone();
         tasks.push(thread::spawn(move || {
             let left = i * (NUM_DATA / NUM_TASKS);
             let right = (left + (NUM_DATA / NUM_TASKS)).min(NUM_DATA);

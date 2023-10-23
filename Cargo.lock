@@ -142,6 +142,49 @@ dependencies = [
 ]
 
 [[package]]
+name = "arceos-sched-fairness-unbalance"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+ "rand",
+]
+
+[[package]]
+name = "arceos-sched-fairness-unequal"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
+name = "arceos-sched-occupy"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
+name = "arceos-sched-realtime"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
+name = "arceos-sched-static"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
+name = "arceos-sched-yield-speed"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
 name = "arceos-shell"
 version = "0.1.0"
 dependencies = [

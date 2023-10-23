@@ -1,0 +1,13 @@
+[package]
+name = "arceos-sched-static"
+version = "0.1.0"
+edition = "2021"
+authors = ["Haoxing Ye <yehx20@mails.tsinghua.edu.cn>", "Ruoyu Qin <qry19@mails.tsinghua.edu.cn>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+default = ["axstd?/default"]
+
+[dependencies]
+axstd = { path = "../../../ulib/axstd", features = ["alloc", "paging", "multitask", "irq"], optional = true }
