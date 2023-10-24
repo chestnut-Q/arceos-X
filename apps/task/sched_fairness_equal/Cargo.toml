@@ -12,6 +12,7 @@ sched_cfs = ["axstd?/sched_cfs"]
 sched_fifo = ["axstd?/sched_fifo"]
 sched_mlfq = ["axstd?/sched_mlfq"]
 sched_sjf = ["axstd?/sched_sjf"]
+sched_rms = ["axstd?/sched_rms"]
 
 [dependencies]
 axstd = { path = "../../../ulib/axstd", features = ["alloc", "multitask", "irq"], optional = true }

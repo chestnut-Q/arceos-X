@@ -1,29 +1,19 @@
-# Completely Fair Scheduler (CFS) Overview
+# CFS Scheduler
 
-The Completely Fair Scheduler (CFS) is Linux's default process and task scheduler. Its primary aim is to ensure all processes receive an equitable share of the processor's time. Below is a concise overview of its mechanisms:
+CFS (Completely Fair Scheduler)，即完全公平调度器。
 
-## Virtual Runtime (vruntime)
+## 原理
 
-Represents the amount of time a process has run. Processes with smaller vruntime values are scheduled first, meaning infrequently run processes get scheduled promptly when they become active.
+为每个进程提供均等的 CPU 访问机会。使用红黑树来跟踪进程的虚拟运行时间，确保每个进程获得公平的 CPU 时间。
 
-## Red-Black Tree
+## 优点
 
-CFS employs a red-black tree to track all runnable processes, sorted by vruntime. The leftmost node (smallest vruntime) is scheduled first.
+公平，响应性好。
 
-## Dynamic Time Slices
+## 缺点
 
-CFS doesn't have fixed time quanta. Instead, it calculates dynamic time slices based on system load and task demands.
+对于某些特定类型的负载，可能不如其他策略高效。
 
-## Sleep and Wake-up
+## 应用场景
 
-Processes that sleep for extended periods don't accrue vruntime, allowing them to be scheduled quickly upon waking.
-
-## Task Weights and Scheduling Groups
-
-CFS permits setting task weights. Higher-weighted tasks receive more CPU time. Groups of tasks can be managed together through scheduling groups.
-
-## Load Balancing
-
-In multi-processor systems, CFS ensures tasks are evenly distributed among all processors.
-
-The goal of CFS is to deliver fair CPU time to every process while maintaining high throughput and responsiveness.
+Linux内核。
