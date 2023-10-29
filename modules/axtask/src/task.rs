@@ -137,12 +137,14 @@ impl TaskInner {
         }
     }
 
-    /// Create a new task with the given entry function and stack size.
-    pub(crate) fn new<F>(entry: F, name: String, stack_size: usize) -> AxTaskRef
+cfg_if::cfg_if! {
+if #[cfg(feature = "sched_cfs")] {
+    /// Create a new task with the given entry function, stack size and nice.
+    pub(crate) fn new<F>(entry: F, name: String, stack_size: usize, _nice: isize) -> AxTaskRef
     where
         F: FnOnce() + Send + 'static,
     {
-        let mut t = Self::new_common(TaskId::new(), name);
+        let mut t = Self::new_common(TaskId::new(), name.clone());
         debug!("new task: {}", t.id_name());
         let kstack = TaskStack::alloc(align_up_4k(stack_size));
 
@@ -154,12 +156,61 @@ impl TaskInner {
         t.entry = Some(Box::into_raw(Box::new(entry)));
         t.ctx.get_mut().init(task_entry as usize, kstack.top(), tls);
         t.kstack = Some(kstack);
-        if t.name == "idle" {
+        if name == "idle" {
+            t.is_idle = true;
+        }
+        Arc::new(AxTask::new(t, _nice as isize))
+    }
+} else if #[cfg(feature = "sched_rms")] {
+    /// Create a new task with the given entry function, stack size, runtime and period.
+    pub(crate) fn new<F>(entry: F, name: String, stack_size: usize, runtime: usize, period: usize) -> AxTaskRef
+    where
+        F: FnOnce() + Send + 'static,
+    {
+        let mut t = Self::new_common(TaskId::new(), name.clone());
+        debug!("new task: {}", t.id_name());
+        let kstack = TaskStack::alloc(align_up_4k(stack_size));
+
+        #[cfg(feature = "tls")]
+        let tls = VirtAddr::from(t.tls.tls_ptr() as usize);
+        #[cfg(not(feature = "tls"))]
+        let tls = VirtAddr::from(0);
+
+        t.entry = Some(Box::into_raw(Box::new(entry)));
+        t.ctx.get_mut().init(task_entry as usize, kstack.top(), tls);
+        t.kstack = Some(kstack);
+        if name == "idle" {
+            t.is_idle = true;
+        }
+        Arc::new(AxTask::new(t, runtime, period))
+    }
+} else {
+    /// Create a new task with the given entry function and stack size.
+    pub(crate) fn new<F>(entry: F, name: String, stack_size: usize) -> AxTaskRef
+    where
+        F: FnOnce() + Send + 'static,
+    {
+        let mut t = Self::new_common(TaskId::new(), name.clone());
+        debug!("new task: {}", t.id_name());
+        let kstack = TaskStack::alloc(align_up_4k(stack_size));
+
+        #[cfg(feature = "tls")]
+        let tls = VirtAddr::from(t.tls.tls_ptr() as usize);
+        #[cfg(not(feature = "tls"))]
+        let tls = VirtAddr::from(0);
+
+        t.entry = Some(Box::into_raw(Box::new(entry)));
+        t.ctx.get_mut().init(task_entry as usize, kstack.top(), tls);
+        t.kstack = Some(kstack);
+        if name == "idle" {
             t.is_idle = true;
         }
         Arc::new(AxTask::new(t))
     }
+}}
 
+cfg_if::cfg_if! {
+if #[cfg(feature = "sched_cfs")] {
     /// Creates an "init task" using the current CPU states, to use as the
     /// current task.
     ///
@@ -169,13 +220,36 @@ impl TaskInner {
     /// And there is no need to set the `entry`, `kstack` or `tls` fields, as
     /// they will be filled automatically when the task is switches out.
     pub(crate) fn new_init(name: String) -> AxTaskRef {
-        let mut t = Self::new_common(TaskId::new(), name);
+        // init_task does not change PC and SP, so `entry` and `kstack` fields are not used.
+        let mut t = Self::new_common(TaskId::new(), name.clone());
         t.is_init = true;
-        if t.name == "idle" {
+        if name == "idle" {
+            t.is_idle = true;
+        }
+        Arc::new(AxTask::new(t, 0))
+    }
+} else if #[cfg(feature = "sched_rms")] {
+    pub(crate) fn new_init(name: String) -> AxTaskRef {
+        // init_task does not change PC and SP, so `entry` and `kstack` fields are not used.
+        let mut t = Self::new_common(TaskId::new(), name.clone());
+        t.is_init = true;
+        if name == "idle" {
+            t.is_idle = true;
+        }
+        Arc::new(AxTask::new(t, 0, 1))
+    }
+} else {
+    pub(crate) fn new_init(name: String) -> AxTaskRef {
+        // init_task does not change PC and SP, so `entry` and `kstack` fields are not used.
+        let mut t = Self::new_common(TaskId::new(), name.clone());
+        t.is_init = true;
+        if name == "idle" {
             t.is_idle = true;
         }
         Arc::new(AxTask::new(t))
     }
+}
+}
 
     #[inline]
     pub(crate) fn state(&self) -> TaskState {

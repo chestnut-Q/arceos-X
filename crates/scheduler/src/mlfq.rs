@@ -11,7 +11,7 @@ pub struct MLFQTask<T, const QNUM: usize, const BASETICK: usize, const RESETTICK
 }
 
 impl<T, const QNUM: usize, const BASETICK: usize, const RESETTICK: usize> MLFQTask<T, QNUM, BASETICK, RESETTICK> {
-    pub const fn new(inner: T, _n: isize) -> Self {
+    pub const fn new(inner: T) -> Self {
         Self {
             inner,
             prio: AtomicIsize::new(0 as isize),
@@ -82,6 +82,11 @@ impl<T, const QNUM: usize, const BASETICK: usize, const RESETTICK: usize> MLFQSc
             ready_queue,
             reset_remain_ticks: AtomicIsize::new(RESETTICK as isize),
         }
+    }
+
+    /// get the name of scheduler
+    pub fn scheduler_name() -> &'static str {
+        "Multi-Level Feedback Queue"
     }
 }
 

@@ -49,6 +49,12 @@ pub struct Builder {
     name: Option<String>,
     // The size of the stack for the spawned thread in bytes
     stack_size: Option<usize>,
+    // #TODO(补充注释) nice
+    nice: Option<isize>,
+    // runtime
+    runtime: Option<usize>,
+    // period
+    period: Option<usize>,
 }
 
 impl Builder {
@@ -58,6 +64,9 @@ impl Builder {
         Builder {
             name: None,
             stack_size: None,
+            nice: None,
+            runtime: None,
+            period: None,
         }
     }
 
@@ -70,6 +79,24 @@ impl Builder {
     /// Sets the size of the stack (in bytes) for the new thread.
     pub fn stack_size(mut self, size: usize) -> Builder {
         self.stack_size = Some(size);
+        self
+    }
+
+    /// Sets the nice for the new thread.
+    pub fn nice(mut self, nice: isize) -> Builder {
+        self.nice = Some(nice);
+        self
+    }
+
+    /// Sets the runtime for the new thread.
+    pub fn runtime(mut self, runtime: usize) -> Builder {
+        self.runtime = Some(runtime);
+        self
+    }
+
+    /// Sets the period for the new thread.
+    pub fn period(mut self, period: usize) -> Builder {
+        self.period = Some(period);
         self
     }
 
@@ -99,6 +126,9 @@ impl Builder {
         let stack_size = self
             .stack_size
             .unwrap_or(arceos_api::config::TASK_STACK_SIZE);
+        let nice = self.nice.unwrap_or(0);
+        let runtime = self.runtime.unwrap_or(0);
+        let period = self.period.unwrap_or(0);
 
         let my_packet = Arc::new(Packet {
             result: UnsafeCell::new(None),
@@ -115,7 +145,7 @@ impl Builder {
             drop(their_packet);
         };
 
-        let task = api::ax_spawn(main, name, stack_size);
+        let task: AxTaskHandle = api::ax_spawn(main, name, stack_size, nice, runtime, period);
         Ok(JoinHandle {
             thread: Thread::from_id(task.id()),
             native: task,
@@ -130,21 +160,48 @@ pub fn current() -> Thread {
     Thread::from_id(id)
 }
 
-/// Spawns a new thread, returning a [`JoinHandle`] for it.
-///
-/// The join handle provides a [`join`] method that can be used to join the
-/// spawned thread.
-///
-/// The default task name is an empty string. The default thread stack size is
-/// [`arceos_api::config::TASK_STACK_SIZE`].
-///
-/// [`join`]: JoinHandle::join
-pub fn spawn<T, F>(f: F) -> JoinHandle<T>
-where
-    F: FnOnce() -> T + Send + 'static,
-    T: Send + 'static,
-{
-    Builder::new().spawn(f).expect("failed to spawn thread")
+cfg_if::cfg_if! {
+if #[cfg(feature = "sched_cfs")] {
+    pub fn spawn<T, F>(f: F, nice: isize) -> JoinHandle<T>
+    where
+        F: FnOnce() -> T + Send + 'static,
+        T: Send + 'static,
+    {
+        Builder::new()
+            .nice(nice)
+            .spawn(f)
+            .expect("failed to spawn thread")
+    }
+} else if #[cfg(feature = "sched_rms")] {
+    pub fn spawn<T, F>(f: F, runtime: usize, period: usize) -> JoinHandle<T>
+    where
+        F: FnOnce() -> T + Send + 'static,
+        T: Send + 'static,
+    {
+        Builder::new()
+            .runtime(runtime)
+            .period(period)
+            .spawn(f)
+            .expect("failed to spawn thread")
+    }
+} else {
+    /// Spawns a new thread, returning a [`JoinHandle`] for it.
+    ///
+    /// The join handle provides a [`join`] method that can be used to join the
+    /// spawned thread.
+    ///
+    /// The default task name is an empty string. The default thread stack size is
+    /// [`arceos_api::config::TASK_STACK_SIZE`].
+    ///
+    /// [`join`]: JoinHandle::join
+    pub fn spawn<T, F>(f: F) -> JoinHandle<T>
+    where
+        F: FnOnce() -> T + Send + 'static,
+        T: Send + 'static,
+    {
+        Builder::new().spawn(f).expect("failed to spawn thread")
+    }
+}
 }
 
 struct Packet<T> {

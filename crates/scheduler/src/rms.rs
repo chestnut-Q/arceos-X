@@ -7,6 +7,8 @@ use crate::BaseScheduler;
 /// task for RMS
 pub struct RMSTask<T> {
     inner: T,
+    // TODO(qry): 解决 runtime dead_code
+    #[allow(dead_code)]
     runtime: usize,
     period: usize,
 }
@@ -49,6 +51,11 @@ impl<T> RMScheduler<T> {
             ready_queue: BTreeMap::new(),
             next_task_id: AtomicUsize::new(0),
         }
+    }
+
+    /// get the name of scheduler
+    pub fn scheduler_name() -> &'static str {
+        "Rate-Monotonic Scheduling"
     }
 }
 

@@ -5,9 +5,6 @@
 #[cfg(feature = "axstd")]
 extern crate axstd as std;
 
-#[cfg(any(feature = "axstd", target_os = "arceos"))]
-use std::os::arceos::api::task::ax_set_current_priority;
-
 use std::os::arceos::api::task::{self as api, AxWaitQueueHandle};
 
 use std::sync::atomic::{AtomicUsize, Ordering};

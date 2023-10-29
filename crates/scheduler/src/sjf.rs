@@ -17,7 +17,7 @@ pub struct SJFTask<T, const A: usize, const LOGB: usize> {
 // TODO：现在全部都是暴力实现
 
 impl<T, const A: usize, const LOGB: usize> SJFTask<T, A, LOGB> {
-    pub const fn new(inner: T, _n: isize) -> Self {
+    pub const fn new(inner: T) -> Self {
         Self {
             inner,
             expect_runtime: AtomicIsize::new(0 as isize),
@@ -125,6 +125,11 @@ impl<T, const A: usize, const LOGB: usize> SJFScheduler<T, A, LOGB> {
             ready_queue: BTreeMap::new(),
             id_pool: AtomicIsize::new(0 as isize),
         }
+    }
+
+    /// get the name of scheduler
+    pub fn scheduler_name() -> &'static str {
+        "Shortest Job First"
     }
 }
 

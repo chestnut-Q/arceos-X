@@ -56,11 +56,53 @@ cfg_task! {
         axtask::current().id().as_u64()
     }
 
-    pub fn ax_spawn<F>(f: F, name: alloc::string::String, stack_size: usize) -> AxTaskHandle
+//     pub fn ax_spawn<F>(
+//         f: F, 
+//         name: alloc::string::String, 
+//         stack_size: usize,
+//         _nice: isize,
+//         _runtime: usize,
+//         _period: usize
+//     ) -> AxTaskHandle
+//     where
+//         F: FnOnce() + Send + 'static,
+//     {
+
+// cfg_if::cfg_if! {
+//     if #[cfg(feature = "sched_cfs")] {
+//         let inner = axtask::spawn(f, name, stack_size, _nice);
+//     } else if #[cfg(feature = "sched_rms")] {
+//         let inner = axtask::spawn(f, name, stack_size, _runtime, _period);
+//     } else {
+//         let inner = axtask::spawn(f, name, stack_size);
+//     }
+// }
+//         AxTaskHandle {
+//             id: inner.id().as_u64(),
+//             inner,
+//         }
+//     }
+
+    pub fn ax_spawn<F>(
+        f: F, 
+        name: alloc::string::String, 
+        stack_size: usize,
+        _nice: isize,
+        _runtime: usize,
+        _period: usize
+    ) -> AxTaskHandle
     where
         F: FnOnce() + Send + 'static,
     {
-        let inner = axtask::spawn_raw(f, name, stack_size);
+cfg_if::cfg_if! {
+    if #[cfg(feature = "sched_cfs")] {
+        let inner = axtask::spawn(f, name, stack_size, _nice);
+    } else if #[cfg(feature = "sched_rms")] {
+        let inner = axtask::spawn(f, name, stack_size, _runtime, _period);
+    } else {
+        let inner = axtask::spawn(f, name, stack_size);
+    }
+}
         AxTaskHandle {
             id: inner.id().as_u64(),
             inner,
@@ -113,6 +155,7 @@ cfg_task! {
         axlog::info!("ax_wait_timeout: timeout = {:?}", timeout);
         #[cfg(feature = "irq")] 
         return wq.0.wait_timeout(timeout);
+        #[allow(unreachable_code)]
         false
     }
 }

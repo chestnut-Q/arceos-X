@@ -30,12 +30,12 @@ const NICE2WEIGHT_NEG: [isize; NICE_RANGE_NEG + 1] = [
 
 impl<T> CFSTask<T> {
     /// new with default values
-    pub const fn new(inner: T) -> Self {
+    pub const fn new(inner: T, n: isize) -> Self {
         Self {
             inner,
             init_vruntime: AtomicIsize::new(0_isize),
             delta: AtomicIsize::new(0_isize),
-            nice: AtomicIsize::new(0_isize),
+            nice: AtomicIsize::new(n as isize),
             id: AtomicIsize::new(0_isize),
         }
     }

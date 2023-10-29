@@ -21,10 +21,19 @@ display = ["dep:axdisplay", "axfeat/display"]
 
 myfs = ["axfeat/myfs"]
 
+# Multi-task
+sched_fifo = ["axtask/sched_fifo", "irq"]
+sched_rr = ["axtask/sched_rr", "irq"]
+sched_cfs = ["axtask/sched_cfs", "irq"]
+sched_sjf = ["axtask/sched_sjf", "irq"]
+sched_mlfq = ["axtask/sched_mlfq", "irq"]
+sched_rms = ["axtask/sched_rms", "irq"]
+
 # Use dummy functions if the feature is not enabled
 dummy-if-not-enabled = []
 
 [dependencies]
+cfg-if = "1.0"
 axfeat = { path = "../axfeat" }
 axruntime = { path = "../../modules/axruntime" }
 axconfig = { path = "../../modules/axconfig" }

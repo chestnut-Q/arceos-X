@@ -20,6 +20,20 @@ cfg_if::cfg_if! {
     } else if #[cfg(feature = "sched_cfs")] {
         pub(crate) type AxTask = scheduler::CFSTask<TaskInner>;
         pub(crate) type Scheduler = scheduler::CFScheduler<TaskInner>;
+    } else if #[cfg(feature = "sched_sjf")] {
+        const ALPHA_A: usize = 1;
+        const ALPHA_LOG_B: usize = 4; // 1/16
+        pub(crate) type AxTask = scheduler::SJFTask<TaskInner, ALPHA_A, ALPHA_LOG_B>;
+        pub(crate) type Scheduler = scheduler::SJFScheduler<TaskInner, ALPHA_A, ALPHA_LOG_B>;
+    } else if #[cfg(feature = "sched_mlfq")] {
+        const QNUM: usize = 8;
+        const BASTTICK: usize = 1;
+        const RESETTICK: usize = 100_000;
+        pub(crate) type AxTask = scheduler::MLFQTask<TaskInner, QNUM, BASTTICK, RESETTICK>;
+        pub(crate) type Scheduler = scheduler::MLFQScheduler<TaskInner, QNUM, BASTTICK, RESETTICK>;
+    } else if #[cfg(feature = "sched_rms")] {
+        pub(crate) type AxTask = scheduler::RMSTask<TaskInner>;
+        pub(crate) type Scheduler = scheduler::RMScheduler<TaskInner>;
     } else {
         // If no scheduler features are set, use FIFO as the default.
         pub(crate) type AxTask = scheduler::FifoTask<TaskInner>;
@@ -87,29 +101,41 @@ pub fn on_timer_tick() {
     RUN_QUEUE.lock().scheduler_timer_tick();
 }
 
-/// Spawns a new task with the given parameters.
-///
-/// Returns the task reference.
-pub fn spawn_raw<F>(f: F, name: String, stack_size: usize) -> AxTaskRef
-where
-    F: FnOnce() + Send + 'static,
-{
-    let task = TaskInner::new(f, name, stack_size);
-    RUN_QUEUE.lock().add_task(task.clone());
-    task
+cfg_if::cfg_if! {
+if #[cfg(feature = "sched_cfs")] {
+    /// Spawns a new task with the default parameters.
+    ///
+    /// The default task name is an empty string. The default task stack size is
+    /// [`axconfig::TASK_STACK_SIZE`].
+    ///
+    /// Returns the task reference.
+    pub fn spawn<F>(f: F, name: String, stack_size: usize,  _nice: isize) -> AxTaskRef
+    where
+        F: FnOnce() + Send + 'static,
+    {
+        let task = TaskInner::new(f, name, stack_size, _nice);
+        RUN_QUEUE.lock().add_task(task.clone());
+        task
+    }
+} else if #[cfg(feature = "sched_rms")] {
+    pub fn spawn<F>(f: F, name: String, stack_size: usize, runtime: usize, period: usize) -> AxTaskRef
+    where
+        F: FnOnce() + Send + 'static,
+    {
+        let task = TaskInner::new(f, name, stack_size, runtime, period);
+        RUN_QUEUE.lock().add_task(task.clone());
+        task
+    }
+} else {
+    pub fn spawn<F>(f: F, name: String, stack_size: usize) -> AxTaskRef
+    where
+        F: FnOnce() + Send + 'static,
+    {
+        let task = TaskInner::new(f, name, stack_size);
+        RUN_QUEUE.lock().add_task(task.clone());
+        task
+    }
 }
-
-/// Spawns a new task with the default parameters.
-///
-/// The default task name is an empty string. The default task stack size is
-/// [`axconfig::TASK_STACK_SIZE`].
-///
-/// Returns the task reference.
-pub fn spawn<F>(f: F) -> AxTaskRef
-where
-    F: FnOnce() + Send + 'static,
-{
-    spawn_raw(f, "".into(), axconfig::TASK_STACK_SIZE)
 }
 
 /// Set the priority for current task.

@@ -23,12 +23,33 @@ pub(crate) struct AxRunQueue {
 }
 
 impl AxRunQueue {
+
+cfg_if::cfg_if! {
+if #[cfg(feature = "sched_cfs")] {
+    pub fn new(_nice: isize) -> SpinNoIrq<Self> {
+        let gc_task: Arc<scheduler::CFSTask<TaskInner>> = 
+            TaskInner::new(gc_entry, "gc".into(), axconfig::TASK_STACK_SIZE, _nice);
+        let mut scheduler = Scheduler::new();
+        scheduler.add_task(gc_task);
+        SpinNoIrq::new(Self { scheduler })
+    }
+} else if #[cfg(feature = "sched_rms")] {
+    pub fn new(runtime: usize, period: usize) -> SpinNoIrq<Self> {
+        let gc_task: Arc<scheduler::RMSTask<TaskInner>> = 
+            TaskInner::new(gc_entry, "gc".into(), axconfig::TASK_STACK_SIZE, runtime, period);
+        let mut scheduler = Scheduler::new();
+        scheduler.add_task(gc_task);
+        SpinNoIrq::new(Self { scheduler })
+    }
+} else {
     pub fn new() -> SpinNoIrq<Self> {
         let gc_task = TaskInner::new(gc_entry, "gc".into(), axconfig::TASK_STACK_SIZE);
         let mut scheduler = Scheduler::new();
         scheduler.add_task(gc_task);
         SpinNoIrq::new(Self { scheduler })
     }
+}
+}
 
     pub fn add_task(&mut self, task: AxTaskRef) {
         debug!("task spawn: {}", task.id_name());
@@ -213,16 +234,44 @@ fn gc_entry() {
     }
 }
 
-pub(crate) fn init() {
-    const IDLE_TASK_STACK_SIZE: usize = 4096;
-    let idle_task = TaskInner::new(|| crate::run_idle(), "idle".into(), IDLE_TASK_STACK_SIZE);
-    IDLE_TASK.with_current(|i| i.init_by(idle_task.clone()));
-
-    let main_task = TaskInner::new_init("main".into());
-    main_task.set_state(TaskState::Running);
-
-    RUN_QUEUE.init_by(AxRunQueue::new());
-    unsafe { CurrentTask::init_current(main_task) }
+cfg_if::cfg_if! {
+if #[cfg(feature = "sched_cfs")] {
+    pub(crate) fn init() {
+        const IDLE_TASK_STACK_SIZE: usize = 4096;
+        let idle_task = TaskInner::new(|| crate::run_idle(), "idle".into(), IDLE_TASK_STACK_SIZE, 0);
+        IDLE_TASK.with_current(|i| i.init_by(idle_task.clone()));
+    
+        let main_task = TaskInner::new_init("main".into());
+        main_task.set_state(TaskState::Running);
+    
+        RUN_QUEUE.init_by(AxRunQueue::new(0));
+        unsafe { CurrentTask::init_current(main_task) }
+    }
+} else if #[cfg(feature = "sched_rms")] {
+    pub(crate) fn init() {
+        const IDLE_TASK_STACK_SIZE: usize = 4096;
+        let idle_task = TaskInner::new(|| crate::run_idle(), "idle".into(), IDLE_TASK_STACK_SIZE, 0, 1);
+        IDLE_TASK.with_current(|i| i.init_by(idle_task.clone()));
+    
+        let main_task = TaskInner::new_init("main".into());
+        main_task.set_state(TaskState::Running);
+    
+        RUN_QUEUE.init_by(AxRunQueue::new(0, 1));
+        unsafe { CurrentTask::init_current(main_task) }
+    }
+} else {
+    pub(crate) fn init() {
+        const IDLE_TASK_STACK_SIZE: usize = 4096;
+        let idle_task = TaskInner::new(|| crate::run_idle(), "idle".into(), IDLE_TASK_STACK_SIZE);
+        IDLE_TASK.with_current(|i| i.init_by(idle_task.clone()));
+    
+        let main_task = TaskInner::new_init("main".into());
+        main_task.set_state(TaskState::Running);
+    
+        RUN_QUEUE.init_by(AxRunQueue::new());
+        unsafe { CurrentTask::init_current(main_task) }
+    }
+}
 }
 
 pub(crate) fn init_secondary() {

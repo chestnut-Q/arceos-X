@@ -38,12 +38,12 @@ tls = ["axfeat/tls"]
 
 # Multi-threading and scheduler
 multitask = ["arceos_api/multitask", "axfeat/multitask"]
-sched_fifo = ["axfeat/sched_fifo"]
-sched_rr = ["axfeat/sched_rr"]
-sched_cfs = ["axfeat/sched_cfs"]
-sched_rms = ["axfeat/sched_rms"]
-sched_mlfq = ["axfeat/sched_mlfq"]
-sched_sjf = ["axfeat/sched_sjf"]
+sched_fifo = ["axfeat/sched_fifo", "arceos_api/sched_fifo"]
+sched_rr = ["axfeat/sched_rr", "arceos_api/sched_rr"]
+sched_cfs = ["axfeat/sched_cfs", "arceos_api/sched_cfs"]
+sched_rms = ["axfeat/sched_rms", "arceos_api/sched_rms"]
+sched_mlfq = ["axfeat/sched_mlfq", "arceos_api/sched_mlfq"]
+sched_sjf = ["axfeat/sched_sjf", "arceos_api/sched_sjf"]
 
 # File system
 fs = ["arceos_api/fs", "axfeat/fs"]
@@ -72,6 +72,7 @@ log-level-debug = ["axfeat/log-level-debug"]
 log-level-trace = ["axfeat/log-level-trace"]
 
 [dependencies]
+cfg-if = "1.0"
 axfeat = { path = "../../api/axfeat" }
 arceos_api = { path = "../../api/arceos_api" }
 axio = { path = "../../crates/axio" }

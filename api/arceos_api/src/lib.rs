@@ -112,7 +112,10 @@ pub mod task {
         pub fn ax_spawn(
             f: impl FnOnce() + Send + 'static,
             name: alloc::string::String,
-            stack_size: usize
+            stack_size: usize,
+            nice: isize,
+            runtime: usize,
+            period: usize
         ) -> AxTaskHandle;
         /// Waits for the given task to exit, and returns its exit code (the
         /// argument of [`ax_exit`]).
