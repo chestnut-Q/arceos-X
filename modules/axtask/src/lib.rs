@@ -29,6 +29,9 @@
 #![feature(doc_cfg)]
 #![feature(doc_auto_cfg)]
 
+const SMP : usize = axconfig::SMP;
+type Manager = load_balance_manager::NaiveManager<AxTask, SMP>;
+
 cfg_if::cfg_if! {
     if #[cfg(feature = "multitask")] {
         #[macro_use]

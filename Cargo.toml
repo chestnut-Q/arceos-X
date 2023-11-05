@@ -31,6 +31,7 @@ members = [
     "crates/percpu_macros",
     "crates/ratio",
     "crates/scheduler",
+    "crates/load_balance_manager",
     "crates/slab_allocator",
     "crates/spinlock",
     "crates/timer_list",

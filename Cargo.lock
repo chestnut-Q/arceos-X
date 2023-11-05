@@ -279,6 +279,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "array-init"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f30bbe2f5e3d117f55bd8c7a1f9191e4a5deba9f15f595bbea4f670c59c765db"
+
+[[package]]
 name = "atomic-polyfill"
 version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -540,6 +546,7 @@ dependencies = [
 name = "axtask"
 version = "0.1.0"
 dependencies = [
+ "array-init",
  "axconfig",
  "axhal",
  "axtask",
@@ -547,6 +554,8 @@ dependencies = [
  "crate_interface",
  "kernel_guard",
  "lazy_init",
+ "lazy_static",
+ "load_balance_manager",
  "log",
  "memory_addr",
  "percpu",
@@ -1257,6 +1266,21 @@ name = "linux-raw-sys"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57bcfdad1b858c2db7c38303a6d2ad4dfaf5eb53dfeb0910128b2c26d6158503"
+
+[[package]]
+name = "load_balance_manager"
+version = "0.1.0"
+dependencies = [
+ "axhal",
+ "axlog",
+ "cfg-if",
+ "chrono",
+ "crate_interface",
+ "linked_list",
+ "log",
+ "scheduler",
+ "spinlock",
+]
 
 [[package]]
 name = "lock_api"

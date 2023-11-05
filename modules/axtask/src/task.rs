@@ -2,6 +2,7 @@ use alloc::{boxed::Box, string::String, sync::Arc};
 use core::ops::Deref;
 use core::sync::atomic::{AtomicBool, AtomicI32, AtomicU64, AtomicU8, Ordering};
 use core::{alloc::Layout, cell::UnsafeCell, fmt, ptr::NonNull};
+use crate::get_current_cpu_id;
 
 #[cfg(feature = "preempt")]
 use core::sync::atomic::AtomicUsize;
@@ -339,9 +340,9 @@ if #[cfg(feature = "sched_cfs")] {
     fn current_check_preempt_pending() {
         let curr = crate::current();
         if curr.need_resched.load(Ordering::Acquire) && curr.can_preempt(0) {
-            let mut rq = crate::RUN_QUEUE.lock();
+            let mut rq = crate::RUN_QUEUE[get_current_cpu_id()].lock();
             if curr.need_resched.load(Ordering::Acquire) {
-                rq.preempt_resched();
+                rq.resched();
             }
         }
     }
@@ -454,8 +455,7 @@ impl Deref for CurrentTask {
 
 extern "C" fn task_entry() -> ! {
     // release the lock that was implicitly held across the reschedule
-    unsafe { crate::RUN_QUEUE.force_unlock() };
-    #[cfg(feature = "irq")]
+    unsafe { crate::RUN_QUEUE[get_current_cpu_id()].force_unlock() };
     axhal::arch::enable_irqs();
     let task = crate::current();
     if let Some(entry) = task.entry {

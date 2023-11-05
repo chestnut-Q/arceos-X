@@ -3,12 +3,26 @@ use alloc::sync::Arc;
 use lazy_init::LazyInit;
 use scheduler::BaseScheduler;
 use spinlock::SpinNoIrq;
+use alloc::vec::Vec;
+use crate::get_current_cpu_id;
+use lazy_static::lazy_static;
+use crate::Manager;
+use load_balance_manager::BaseManager;
+use crate::AxTask;
+
 
 use crate::task::{CurrentTask, TaskState};
 use crate::{AxTaskRef, Scheduler, TaskInner, WaitQueue};
 
 // TODO: per-CPU
-pub(crate) static RUN_QUEUE: LazyInit<SpinNoIrq<AxRunQueue>> = LazyInit::new();
+// pub(crate) static RUN_QUEUE: LazyInit<SpinNoIrq<AxRunQueue>> = LazyInit::new();
+use array_init::array_init;
+lazy_static! {
+    pub(crate) static ref RUN_QUEUE: [LazyInit<Arc<SpinNoIrq<AxRunQueue>>>; axconfig::SMP] = array_init(|_| LazyInit::new());
+    pub(crate) static ref REAL_RUN_QUEUE: [LazyInit<Arc<SpinNoIrq<Scheduler>>>; axconfig::SMP] = array_init(|_| LazyInit::new());
+}
+
+pub(crate) static RUN_MANAGER: LazyInit<SpinNoIrq<Manager>> = LazyInit::new();
 
 // TODO: per-CPU
 static EXITED_TASKS: SpinNoIrq<VecDeque<AxTaskRef>> = SpinNoIrq::new(VecDeque::new());
@@ -19,7 +33,7 @@ static WAIT_FOR_EXIT: WaitQueue = WaitQueue::new();
 static IDLE_TASK: LazyInit<AxTaskRef> = LazyInit::new();
 
 pub(crate) struct AxRunQueue {
-    scheduler: Scheduler,
+    scheduler: Arc<SpinNoIrq<Scheduler>>,
 }
 
 impl AxRunQueue {
@@ -42,11 +56,21 @@ if #[cfg(feature = "sched_cfs")] {
         SpinNoIrq::new(Self { scheduler })
     }
 } else {
-    pub fn new() -> SpinNoIrq<Self> {
+    // pub fn new() -> SpinNoIrq<Self> {
+    //     let gc_task = TaskInner::new(gc_entry, "gc".into(), axconfig::TASK_STACK_SIZE);
+    //     let mut scheduler = Scheduler::new();
+    //     scheduler.add_task(gc_task);
+    //     SpinNoIrq::new(Self { scheduler })
+    // }
+    pub fn new(hartid: usize) -> Arc<SpinNoIrq<Self>> {
         let gc_task = TaskInner::new(gc_entry, "gc".into(), axconfig::TASK_STACK_SIZE);
-        let mut scheduler = Scheduler::new();
-        scheduler.add_task(gc_task);
-        SpinNoIrq::new(Self { scheduler })
+        let scheduler = Arc::new(SpinNoIrq::new(Scheduler::new()));
+        REAL_RUN_QUEUE[hartid].init_by(scheduler.clone());
+        let tmp = Arc::new(SpinNoIrq::new(Self { scheduler: scheduler.clone() })) ;
+        let tmp_as_dyn = scheduler.clone() as Arc<SpinNoIrq<dyn BaseScheduler<SchedItem = Arc<AxTask>> + Send + 'static>>;
+        RUN_MANAGER.lock().init(hartid, tmp_as_dyn.clone());
+        RUN_MANAGER.lock().add_task(hartid, gc_task);
+        tmp
     }
 }
 }
@@ -54,13 +78,13 @@ if #[cfg(feature = "sched_cfs")] {
     pub fn add_task(&mut self, task: AxTaskRef) {
         debug!("task spawn: {}", task.id_name());
         assert!(task.is_ready());
-        self.scheduler.add_task(task);
+        RUN_MANAGER.lock().add_task(get_current_cpu_id(), task);
     }
 
     #[cfg(feature = "irq")]
     pub fn scheduler_timer_tick(&mut self) {
         let curr = crate::current();
-        if !curr.is_idle() && self.scheduler.task_tick(curr.as_task_ref()) {
+        if !curr.is_idle() && RUN_MANAGER.lock().task_tick(get_current_cpu_id(), curr.as_task_ref()) {
             #[cfg(feature = "preempt")]
             curr.set_preempt_pending(true);
         }
@@ -68,18 +92,13 @@ if #[cfg(feature = "sched_cfs")] {
 
     pub fn yield_current(&mut self) {
         let curr = crate::current();
-        trace!("task yield: {}", curr.id_name());
+        debug!("task yield: {}", curr.id_name());
         assert!(curr.is_running());
-        self.resched(false);
-    }
-
-    pub fn set_current_priority(&mut self, prio: isize) -> bool {
-        self.scheduler
-            .set_priority(crate::current().as_task_ref(), prio)
+        self.resched_inner(false);
     }
 
     #[cfg(feature = "preempt")]
-    pub fn preempt_resched(&mut self) {
+    pub fn resched(&mut self) {
         let curr = crate::current();
         assert!(curr.is_running());
 
@@ -96,7 +115,7 @@ if #[cfg(feature = "sched_cfs")] {
             can_preempt
         );
         if can_preempt {
-            self.resched(true);
+            self.resched_inner(true);
         } else {
             curr.set_preempt_pending(true);
         }
@@ -112,10 +131,9 @@ if #[cfg(feature = "sched_cfs")] {
             axhal::misc::terminate();
         } else {
             curr.set_state(TaskState::Exited);
-            curr.notify_exit(exit_code, self);
             EXITED_TASKS.lock().push_back(curr.clone());
             WAIT_FOR_EXIT.notify_one_locked(false, self);
-            self.resched(false);
+            self.resched_inner(false);
         }
         unreachable!("task exited!");
     }
@@ -135,14 +153,14 @@ if #[cfg(feature = "sched_cfs")] {
 
         curr.set_state(TaskState::Blocked);
         wait_queue_push(curr.clone());
-        self.resched(false);
+        self.resched_inner(false);
     }
 
     pub fn unblock_task(&mut self, task: AxTaskRef, resched: bool) {
         debug!("task unblock: {}", task.id_name());
         if task.is_blocked() {
             task.set_state(TaskState::Ready);
-            self.scheduler.add_task(task); // TODO: priority
+            RUN_MANAGER.lock().add_task(get_current_cpu_id(), task);
             if resched {
                 #[cfg(feature = "preempt")]
                 crate::current().set_preempt_pending(true);
@@ -161,7 +179,7 @@ if #[cfg(feature = "sched_cfs")] {
         if now < deadline {
             crate::timers::set_alarm_wakeup(deadline, curr.clone());
             curr.set_state(TaskState::Blocked);
-            self.resched(false);
+            self.resched_inner(false);
         }
     }
 }
@@ -169,15 +187,15 @@ if #[cfg(feature = "sched_cfs")] {
 impl AxRunQueue {
     /// Common reschedule subroutine. If `preempt`, keep current task's time
     /// slice, otherwise reset it.
-    fn resched(&mut self, preempt: bool) {
+    fn resched_inner(&mut self, preempt: bool) {
         let prev = crate::current();
         if prev.is_running() {
             prev.set_state(TaskState::Ready);
             if !prev.is_idle() {
-                self.scheduler.put_prev_task(prev.clone(), preempt);
+                RUN_MANAGER.lock().put_prev_task(get_current_cpu_id(), prev.clone(), preempt);
             }
         }
-        let next = self.scheduler.pick_next_task().unwrap_or_else(|| unsafe {
+        let next = RUN_MANAGER.lock().pick_next_task(get_current_cpu_id()).unwrap_or_else(|| unsafe {
             // Safety: IRQs must be disabled at this time.
             IDLE_TASK.current_ref_raw().get_unchecked().clone()
         });
@@ -189,6 +207,12 @@ impl AxRunQueue {
             "context switch: {} -> {}",
             prev_task.id_name(),
             next_task.id_name()
+        );
+        trace!(
+            "Arc: prev {}", Arc::strong_count(prev_task.as_task_ref()),
+        );
+        trace!(
+            "Arc: next {}", Arc::strong_count(&next_task),
         );
         #[cfg(feature = "preempt")]
         next_task.set_preempt_pending(false);
@@ -208,6 +232,7 @@ impl AxRunQueue {
 
             CurrentTask::set_current(prev_task, next_task);
             (*prev_ctx_ptr).switch_to(&*next_ctx_ptr);
+            
         }
     }
 }
@@ -215,19 +240,15 @@ impl AxRunQueue {
 fn gc_entry() {
     loop {
         // Drop all exited tasks and recycle resources.
-        let n = EXITED_TASKS.lock().len();
-        for _ in 0..n {
+        while !EXITED_TASKS.lock().is_empty() {
             // Do not do the slow drops in the critical section.
             let task = EXITED_TASKS.lock().pop_front();
             if let Some(task) = task {
-                if Arc::strong_count(&task) == 1 {
-                    // If I'm the last holder of the task, drop it immediately.
-                    drop(task);
-                } else {
-                    // Otherwise (e.g, `switch_to` is not compeleted, held by the
-                    // joiner, etc), push it back and wait for them to drop first.
-                    EXITED_TASKS.lock().push_back(task);
+                // wait for other threads to release the reference.
+                while Arc::strong_count(&task) > 1 {
+                    core::hint::spin_loop();
                 }
+                drop(task);
             }
         }
         WAIT_FOR_EXIT.wait();
@@ -261,14 +282,16 @@ if #[cfg(feature = "sched_cfs")] {
     }
 } else {
     pub(crate) fn init() {
+        RUN_MANAGER.init_by(SpinNoIrq::new(Manager::new()));
+        for i in 0..axconfig::SMP {
+            RUN_QUEUE[i].init_by(AxRunQueue::new(i));
+        }
         const IDLE_TASK_STACK_SIZE: usize = 4096;
         let idle_task = TaskInner::new(|| crate::run_idle(), "idle".into(), IDLE_TASK_STACK_SIZE);
-        IDLE_TASK.with_current(|i| i.init_by(idle_task.clone()));
-    
+        IDLE_TASK.with_current(|i| i.init_by(idle_task.clone()));     
         let main_task = TaskInner::new_init("main".into());
         main_task.set_state(TaskState::Running);
     
-        RUN_QUEUE.init_by(AxRunQueue::new());
         unsafe { CurrentTask::init_current(main_task) }
     }
 }

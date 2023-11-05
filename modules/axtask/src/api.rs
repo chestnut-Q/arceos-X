@@ -9,6 +9,38 @@ pub use crate::task::{CurrentTask, TaskId, TaskInner};
 #[doc(cfg(feature = "multitask"))]
 pub use crate::wait_queue::WaitQueue;
 
+struct LogTaskImpl;
+
+#[cfg(not(feature = "std"))]
+#[def_interface]
+pub trait LogMyTime {
+    /// get current time
+    fn current_cpu_id() -> Option<usize>;
+}
+
+use core::sync::atomic::{AtomicUsize, Ordering};
+pub static INITED_CPUS: AtomicUsize = AtomicUsize::new(0);
+
+pub fn is_init_ok() -> bool {
+    INITED_CPUS.load(Ordering::Acquire) == axconfig::SMP
+}
+
+#[crate_interface::impl_interface]
+impl LogMyTime for LogTaskImpl {
+    fn current_cpu_id() -> Option<usize> {
+        #[cfg(feature = "smp")] {
+            Some(axhal::cpu::this_cpu_id())
+        }
+        #[cfg(not(feature = "smp"))]
+        Some(0)
+    }
+}
+
+use crate_interface::{call_interface, def_interface};
+pub fn get_current_cpu_id() -> usize {
+    call_interface!(LogMyTime::current_cpu_id).unwrap()
+}
+
 /// The reference type of a task.
 pub type AxTaskRef = Arc<AxTask>;
 
@@ -98,7 +130,7 @@ pub fn init_scheduler_secondary() {
 #[doc(cfg(feature = "irq"))]
 pub fn on_timer_tick() {
     crate::timers::check_events();
-    RUN_QUEUE.lock().scheduler_timer_tick();
+    RUN_QUEUE[get_current_cpu_id()].lock().scheduler_timer_tick();
 }
 
 cfg_if::cfg_if! {
@@ -114,7 +146,7 @@ if #[cfg(feature = "sched_cfs")] {
         F: FnOnce() + Send + 'static,
     {
         let task = TaskInner::new(f, name, stack_size, _nice);
-        RUN_QUEUE.lock().add_task(task.clone());
+        RUN_QUEUE[get_current_cpu_id()].lock().add_task(task.clone());
         task
     }
 } else if #[cfg(feature = "sched_rms")] {
@@ -123,7 +155,7 @@ if #[cfg(feature = "sched_cfs")] {
         F: FnOnce() + Send + 'static,
     {
         let task = TaskInner::new(f, name, stack_size, runtime, period);
-        RUN_QUEUE.lock().add_task(task.clone());
+        RUN_QUEUE[get_current_cpu_id()].lock().add_task(task.clone());
         task
     }
 } else {
@@ -132,7 +164,7 @@ if #[cfg(feature = "sched_cfs")] {
         F: FnOnce() + Send + 'static,
     {
         let task = TaskInner::new(f, name, stack_size);
-        RUN_QUEUE.lock().add_task(task.clone());
+        RUN_QUEUE[get_current_cpu_id()].lock().add_task(task.clone());
         task
     }
 }
@@ -148,13 +180,14 @@ if #[cfg(feature = "sched_cfs")] {
 ///
 /// [CFS]: https://en.wikipedia.org/wiki/Completely_Fair_Scheduler
 pub fn set_priority(prio: isize) -> bool {
-    RUN_QUEUE.lock().set_current_priority(prio)
+    // RUN_QUEUE[get_current_cpu_id()].lock().set_current_priority(prio)
+    true
 }
 
 /// Current task gives up the CPU time voluntarily, and switches to another
 /// ready task.
 pub fn yield_now() {
-    RUN_QUEUE.lock().yield_current();
+    RUN_QUEUE[get_current_cpu_id()].lock().yield_current();
 }
 
 /// Current task is going to sleep for the given duration.
@@ -169,14 +202,14 @@ pub fn sleep(dur: core::time::Duration) {
 /// If the feature `irq` is not enabled, it uses busy-wait instead.
 pub fn sleep_until(deadline: axhal::time::TimeValue) {
     #[cfg(feature = "irq")]
-    RUN_QUEUE.lock().sleep_until(deadline);
+    RUN_QUEUE[get_current_cpu_id()].lock().sleep_until(deadline);
     #[cfg(not(feature = "irq"))]
     axhal::time::busy_wait_until(deadline);
 }
 
 /// Exits the current task.
 pub fn exit(exit_code: i32) -> ! {
-    RUN_QUEUE.lock().exit_current(exit_code)
+    RUN_QUEUE[get_current_cpu_id()].lock().exit_current(exit_code)
 }
 
 /// The idle task routine.

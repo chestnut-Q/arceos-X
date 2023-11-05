@@ -1,0 +1,18 @@
+[package]
+name = "load_balance_manager"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ruoyu Qin <qry19@mails.tsinghua.edu.cn>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+linked_list = { path = "../linked_list" }
+axhal = { path = "../../modules/axhal" }
+axlog = { path = "../../modules/axlog"}#, features = ["std"]}
+cfg-if = "1.0"
+crate_interface = { path = "../../crates/crate_interface"}
+chrono = { version = "0.4", optional = true }
+log = "0.4"
+spinlock = { path = "../../crates/spinlock" }
+scheduler = { path = "../../crates/scheduler" }

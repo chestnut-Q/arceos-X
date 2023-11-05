@@ -14,7 +14,7 @@ default = []
 
 multitask = [
     "dep:axconfig", "dep:percpu", "dep:spinlock", "dep:lazy_init", "dep:memory_addr",
-    "dep:scheduler", "dep:timer_list", "kernel_guard", "dep:crate_interface",
+    "dep:scheduler", "dep:timer_list", "kernel_guard", "dep:crate_interface", "dep:load_balance_manager"
 ]
 irq = []
 tls = ["axhal/tls"]
@@ -30,6 +30,7 @@ sched_sjf = ["multitask", "preempt"]
 test = ["percpu?/sp-naive"]
 
 [dependencies]
+array-init = "0.1"
 cfg-if = "1.0"
 log = "0.4"
 axhal = { path = "../axhal" }
@@ -42,6 +43,8 @@ scheduler = { path = "../../crates/scheduler", optional = true }
 timer_list = { path = "../../crates/timer_list", optional = true }
 kernel_guard = { path = "../../crates/kernel_guard", optional = true }
 crate_interface = { path = "../../crates/crate_interface", optional = true }
+lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
+load_balance_manager = { path = "../../crates/load_balance_manager", optional = true}
 
 [dev-dependencies]
 rand = "0.8"
