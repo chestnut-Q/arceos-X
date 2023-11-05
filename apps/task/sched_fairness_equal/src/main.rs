@@ -85,7 +85,7 @@ fn main() {
             if n == NUM_TASKS - 1 {
                 api::ax_wait_queue_wake(&MAIN_WQ, 1);
             }
-        });
+        }, 0);
     }
     let timeout = api::ax_wait_timeout(&MAIN_WQ, Duration::from_millis(20000));
     println!("main task woken up! timeout={}", timeout);
