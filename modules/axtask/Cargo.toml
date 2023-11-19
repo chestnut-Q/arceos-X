@@ -26,6 +26,7 @@ sched_cfs = ["multitask", "preempt"]
 sched_rms = ["multitask", "preempt"]
 sched_mlfq = ["multitask", "preempt"]
 sched_sjf = ["multitask", "preempt"]
+sched_pbg = ["multitask", "preempt"]
 
 test = ["percpu?/sp-naive"]
 

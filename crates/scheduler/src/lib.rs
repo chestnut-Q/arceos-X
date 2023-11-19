@@ -18,6 +18,7 @@ mod round_robin;
 mod rms;
 mod mlfq;
 mod sjf;
+mod pbg;
 
 #[cfg(test)]
 mod tests;
@@ -33,6 +34,7 @@ pub use round_robin::{RRScheduler, RRTask};
 pub use rms::{RMSTask, RMScheduler};
 pub use mlfq::{MLFQTask, MLFQScheduler};
 pub use sjf::{SJFTask, SJFScheduler};
+pub use pbg::{PBGTask, PBGScheduler};
 
 /// The base scheduler trait that all schedulers should implement.
 ///

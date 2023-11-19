@@ -37,6 +37,7 @@ sched_cfs = ["axtask/sched_cfs", "irq"]
 sched_rms = ["axtask/sched_rms", "irq"]
 sched_mlfq = ["axtask/sched_mlfq", "irq"]
 sched_sjf = ["axtask/sched_sjf", "irq"]
+sched_pbg = ["axtask/sched_pbg", "irq"]
 
 # File system
 fs = ["alloc", "paging", "axdriver/virtio-blk", "dep:axfs", "axruntime/fs"] # TODO: try to remove "paging"

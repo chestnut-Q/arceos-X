@@ -28,6 +28,7 @@ sched_cfs = ["axtask/sched_cfs", "irq"]
 sched_sjf = ["axtask/sched_sjf", "irq"]
 sched_mlfq = ["axtask/sched_mlfq", "irq"]
 sched_rms = ["axtask/sched_rms", "irq"]
+sched_pbg = ["axtask/sched_pbg", "irq"]
 
 # Use dummy functions if the feature is not enabled
 dummy-if-not-enabled = []

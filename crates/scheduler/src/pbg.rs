@@ -1,102 +1,95 @@
-use alloc::sync::Arc;
-use core::ops::Deref;
-
-use linked_list::{Adapter, Links, List};
+use core::{sync::atomic::{AtomicIsize, Ordering}, ops::Deref};
+use alloc::{vec::Vec, sync::Arc};
 
 use crate::BaseScheduler;
 
-/// A task wrapper for the [`PBGScheduler`].
-///
-/// It add extra states to use in [`linked_list::List`].
 pub struct PBGTask<T> {
     inner: T,
-    links: Links<Self>,
+    id: AtomicIsize,
 }
 
-unsafe impl<T> Adapter for PBGTask<T> {
-    type EntryType = Self;
-
-    #[inline]
-    fn to_links(t: &Self) -> &Links<Self> {
-        &t.links
-    }
-}
-
-impl<T> FifoTask<T> {
-    /// Creates a new [`FifoTask`] from the inner task struct.
+impl<T> PBGTask<T> {
     pub const fn new(inner: T) -> Self {
         Self {
             inner,
-            links: Links::new(),
+            id: AtomicIsize::new(0 as isize),
         }
     }
 
-    /// Returns a reference to the inner task struct.
-    pub const fn inner(&self) -> &T {
-        &self.inner
+    pub fn set_id(&self, id: isize) {
+        self.id.store(id, Ordering::Release);
+    }
+
+    pub fn get_id(&self) -> isize {
+        self.id.load(Ordering::Acquire)
     }
 }
 
-impl<T> Deref for FifoTask<T> {
+impl<T> Deref for PBGTask<T> {
     type Target = T;
-    #[inline]
+
     fn deref(&self) -> &Self::Target {
         &self.inner
     }
 }
 
-/// A PBG (Program-Behavior-Guided) cooperative scheduler.
-///
-/// When a task is added to the scheduler, it's placed at the end of the ready
-/// queue. When picking the next task to run, the head of the ready queue is
-/// taken.
-///
-/// As it's a cooperative scheduler, it does nothing when the timer tick occurs.
-///
-/// It internally uses a linked list as the ready queue.
-pub struct FifoScheduler<T> {
-    ready_queue: List<Arc<FifoTask<T>>>,
+pub struct PBGScheduler<T> {
+    ready_queue: Vec<Arc<PBGTask<T>>>,
+    id: AtomicIsize,
 }
 
-impl<T> FifoScheduler<T> {
-    /// Creates a new empty [`FifoScheduler`].
+impl<T> PBGScheduler<T> {
     pub const fn new() -> Self {
         Self {
-            ready_queue: List::new(),
+            ready_queue: Vec::new(),
+            id: AtomicIsize::new(0 as isize),
         }
     }
-    /// get the name of scheduler
-    pub fn scheduler_name() -> &'static str {
-        "FIFO"
+
+    /// get the name of the scheduler
+    pub fn scheduler_name(&self) -> &'static str {
+        "Program Behavior Guided"
     }
 }
 
-impl<T> BaseScheduler for FifoScheduler<T> {
-    type SchedItem = Arc<FifoTask<T>>;
+impl<T> BaseScheduler for PBGScheduler<T> {
+    type SchedItem = Arc<PBGTask<T>>;
 
-    fn init(&mut self) {}
+    fn init(&mut self) {
+        self.ready_queue.clear();
+    }
 
     fn add_task(&mut self, task: Self::SchedItem) {
-        self.ready_queue.push_back(task);
+        (*task).set_id(self.id.fetch_add(1, Ordering::Release));
+        self.ready_queue.push(task);
     }
 
     fn remove_task(&mut self, task: &Self::SchedItem) -> Option<Self::SchedItem> {
-        unsafe { self.ready_queue.remove(task) }
+        let id: isize = task.get_id();
+        if let Some(index) = self.ready_queue.iter().position(|x| x.get_id() == id) {
+            Some(self.ready_queue.remove(index))
+        } else {
+            None
+        }
     }
 
     fn pick_next_task(&mut self) -> Option<Self::SchedItem> {
-        self.ready_queue.pop_front()
+        if let Some(task) = self.ready_queue.pop() {
+            Some(task)
+        } else {
+            None
+        }
     }
 
-    fn put_prev_task(&mut self, prev: Self::SchedItem, _preempt: bool) {
-        self.ready_queue.push_back(prev);
+    fn put_prev_task(&mut self, prev: Self::SchedItem, preempt: bool) {
+        self.ready_queue.push(prev);
     }
 
     fn task_tick(&mut self, _current: &Self::SchedItem) -> bool {
-        false // no reschedule
+        false
     }
 
     fn set_priority(&mut self, _task: &Self::SchedItem, _prio: isize) -> bool {
         false
-    }
+    }    
 }

@@ -44,6 +44,7 @@ sched_cfs = ["axfeat/sched_cfs", "arceos_api/sched_cfs"]
 sched_rms = ["axfeat/sched_rms", "arceos_api/sched_rms"]
 sched_mlfq = ["axfeat/sched_mlfq", "arceos_api/sched_mlfq"]
 sched_sjf = ["axfeat/sched_sjf", "arceos_api/sched_sjf"]
+sched_pbg = ["axfeat/sched_pbg", "arceos_api/sched_pbg"]
 
 # File system
 fs = ["arceos_api/fs", "axfeat/fs"]
