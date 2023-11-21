@@ -35,6 +35,7 @@ impl<T> Deref for PBGTask<T> {
 
 pub struct PBGScheduler<T> {
     ready_queue: Vec<Arc<PBGTask<T>>>,
+    exeuted_queue: Vec<u32>,
     id: AtomicIsize,
 }
 
@@ -42,13 +43,22 @@ impl<T> PBGScheduler<T> {
     pub const fn new() -> Self {
         Self {
             ready_queue: Vec::new(),
+            exeuted_queue: Vec::new(),
             id: AtomicIsize::new(0 as isize),
         }
     }
 
     /// get the name of the scheduler
-    pub fn scheduler_name(&self) -> &'static str {
+    pub fn scheduler_name() -> &'static str {
         "Program Behavior Guided"
+    }
+
+    pub fn profile_task_info() {
+
+    }
+
+    pub fn set_task_info() {
+
     }
 }
 
@@ -61,6 +71,7 @@ impl<T> BaseScheduler for PBGScheduler<T> {
 
     fn add_task(&mut self, task: Self::SchedItem) {
         (*task).set_id(self.id.fetch_add(1, Ordering::Release));
+        // axlog::info!("task spawn: {}", (*task).get_id());
         self.ready_queue.push(task);
     }
 

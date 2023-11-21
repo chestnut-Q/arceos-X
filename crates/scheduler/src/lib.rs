@@ -8,6 +8,7 @@
 //! - [`RMScheduler`]: Rate Monotonic Scheduler.
 //! - [`MLFQScheduler`]: Multi-Level Feedback Queue Scheduler.
 //! - [`SJFScheduler`]: Shortest Job First Scheduler.
+//! - [`PBGScheduler`]: Program Behavior Guided Scheduler.
 
 #![cfg_attr(not(test), no_std)]
 #![feature(const_mut_refs)]

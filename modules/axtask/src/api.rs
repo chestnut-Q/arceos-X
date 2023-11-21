@@ -34,6 +34,9 @@ cfg_if::cfg_if! {
     } else if #[cfg(feature = "sched_rms")] {
         pub(crate) type AxTask = scheduler::RMSTask<TaskInner>;
         pub(crate) type Scheduler = scheduler::RMScheduler<TaskInner>;
+    } else if #[cfg(feature = "sched_pbg")] {
+        pub(crate) type AxTask = scheduler::PBGTask<TaskInner>;
+        pub(crate) type Scheduler = scheduler::PBGScheduler<TaskInner>;
     } else {
         // If no scheduler features are set, use FIFO as the default.
         pub(crate) type AxTask = scheduler::FifoTask<TaskInner>;
