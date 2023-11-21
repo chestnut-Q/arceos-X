@@ -11,6 +11,7 @@ use std::time::Duration;
 use std::os::arceos::api::task::{self as api, AxWaitQueueHandle};
 use std::sync::Mutex;
 use std::thread;
+use std::os::arceos::api::task::PBGTaskInfo;
 
 const NUM_DATA: usize = 400000;
 const NUM_TASKS: usize = 4;
@@ -60,6 +61,21 @@ fn main() {
     let timeout = api::ax_wait_timeout(&MAIN_WQ, Duration::from_millis(500));
     assert!(timeout);
 
+    let mut task_infos: Vec<PBGTaskInfo> = Vec::new();
+    for i in 0..NUM_TASKS {
+        task_infos.push(PBGTaskInfo {
+            id: i as isize,
+            exeuted_time: (i + 10) as u32,
+            exeuted_count: (NUM_DATA / NUM_TASKS) as u32,
+        });
+    }
+
+    // #[cfg(feature = "sched_pbg")]
+    let file_name = "sched_yield_speed";
+    if !thread::open_profile(file_name) {
+        thread::open_pbg(file_name, task_infos.as_mut());
+    }
+
     for i in 0..NUM_TASKS {
         let vec = vec.clone();
         thread::spawn(move || {
@@ -88,6 +104,9 @@ fn main() {
     }
     let timeout = api::ax_wait_timeout(&MAIN_WQ, Duration::from_millis(20000));
     println!("main task woken up! timeout={}", timeout);
+
+    #[cfg(feature = "sched_pbg")]
+    thread::close_profile();
 
     let actual = RESULTS.lock().iter().sum();
     let binding = LEAVE_TIME.lock();

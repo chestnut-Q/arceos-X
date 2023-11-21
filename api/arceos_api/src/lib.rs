@@ -81,6 +81,9 @@ pub mod stdio {
 
 /// Multi-threading management.
 pub mod task {
+    pub use alloc::vec::Vec;
+    pub use axtask::PBGTaskInfo;
+
     define_api_type! {
         @cfg "multitask";
         pub type AxTaskHandle;
@@ -101,6 +104,15 @@ pub mod task {
 
         /// Exits the current task with the given exit code.
         pub fn ax_exit(exit_code: i32) -> !;
+
+        /// Open task profiling for PBGScheduler.
+        pub fn ax_open_profile(file_name: &str) -> bool;
+
+        /// Use profile results to schedule tasks.
+        pub fn ax_open_pbg(file_name: &str, task_infos: &mut Vec<PBGTaskInfo>);
+
+        /// Close task profiling.
+        pub fn ax_close_profile();
     }
 
     define_api! {

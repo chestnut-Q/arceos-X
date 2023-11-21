@@ -1,3 +1,6 @@
+use axtask::PBGTaskInfo;
+use alloc::vec::Vec;
+
 pub fn ax_sleep_until(deadline: crate::time::AxTimeValue) {
     #[cfg(feature = "multitask")]
     axtask::sleep_until(deadline);
@@ -21,6 +24,18 @@ pub fn ax_exit(_exit_code: i32) -> ! {
     axtask::exit(_exit_code);
     #[cfg(not(feature = "multitask"))]
     axhal::misc::terminate();
+}
+
+pub fn ax_open_profile(file_name: &str) -> bool {
+    axtask::open_profile(file_name)
+}
+
+pub fn ax_open_pbg(file_name: &str, task_infos: &mut Vec<PBGTaskInfo>) {
+    axtask::open_pbg(file_name, task_infos);
+}
+
+pub fn ax_close_profile() {
+    axtask::close_profile();
 }
 
 cfg_task! {

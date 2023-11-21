@@ -1,5 +1,7 @@
 //! Task APIs for multi-task configuration.
 
+use scheduler::PBGTaskInfo;
+use alloc::vec::Vec;
 use alloc::{string::String, sync::Arc};
 
 pub(crate) use crate::run_queue::{AxRunQueue, RUN_QUEUE};
@@ -192,4 +194,19 @@ pub fn run_idle() -> ! {
         #[cfg(feature = "irq")]
         axhal::arch::wait_for_irqs();
     }
+}
+
+/// Open task profiling for PBGScheduler.
+pub fn open_profile(file_name: &str) -> bool {
+    RUN_QUEUE.lock().open_profile(file_name)
+}
+
+/// Use profile results to schedule tasks.
+pub fn open_pbg(file_name: &str, task_infos: &mut Vec<PBGTaskInfo>) {
+    RUN_QUEUE.lock().open_pbg(file_name, task_infos);
+}
+
+/// Close task profiling.
+pub fn close_profile() {
+    RUN_QUEUE.lock().close_profile();
 }

@@ -35,7 +35,7 @@ pub use round_robin::{RRScheduler, RRTask};
 pub use rms::{RMSTask, RMScheduler};
 pub use mlfq::{MLFQTask, MLFQScheduler};
 pub use sjf::{SJFTask, SJFScheduler};
-pub use pbg::{PBGTask, PBGScheduler};
+pub use pbg::{PBGTask, PBGScheduler, PBGTaskInfo};
 
 /// The base scheduler trait that all schedulers should implement.
 ///
