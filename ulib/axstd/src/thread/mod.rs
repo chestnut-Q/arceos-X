@@ -6,6 +6,8 @@ mod multi;
 pub use multi::*;
 
 use arceos_api::task as api;
+use arceos_api::task::PBGTaskInfo;
+use alloc::vec::Vec;
 
 /// Current thread gives up the CPU time voluntarily, and switches to another
 /// ready thread.
@@ -38,4 +40,19 @@ pub fn sleep(dur: core::time::Duration) {
 /// instead.
 pub fn sleep_until(deadline: arceos_api::time::AxTimeValue) {
     api::ax_sleep_until(deadline);
+}
+
+/// open profile for PBGScheduler
+pub fn open_profile(file_name: &str) -> bool {
+    api::ax_open_profile(file_name)
+}
+
+/// open pbg for PBGScheduler
+pub fn open_pbg(file_name: &str, task_infos: &mut Vec<PBGTaskInfo>) {
+    api::ax_open_pbg(file_name, task_infos);
+}
+
+/// close profile for PBGScheduler
+pub fn close_profile() {
+    api::ax_close_profile();
 }

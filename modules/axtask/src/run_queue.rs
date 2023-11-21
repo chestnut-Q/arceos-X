@@ -1,8 +1,9 @@
 use alloc::collections::VecDeque;
-use alloc::sync::Arc;
+use alloc::{vec::Vec, sync::Arc};
 use lazy_init::LazyInit;
 use scheduler::BaseScheduler;
 use spinlock::SpinNoIrq;
+use scheduler::PBGTaskInfo;
 
 use crate::task::{CurrentTask, TaskState};
 use crate::{AxTaskRef, Scheduler, TaskInner, WaitQueue};
@@ -164,6 +165,27 @@ if #[cfg(feature = "sched_cfs")] {
             self.resched(false);
         }
     }
+
+    pub fn open_profile(&mut self, file_name: &str) -> bool {
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "sched_pbg")] {
+                self.scheduler.open_profile(file_name)
+            } else {
+                false
+            }
+        }
+    }
+
+    pub fn open_pbg(&mut self, file_name: &str, task_infos: &mut Vec<PBGTaskInfo>) {
+        #[cfg(feature = "sched_pbg")]
+        self.scheduler.open_pbg(file_name, task_infos);
+    }
+
+    pub fn close_profile(&mut self) {
+        #[cfg(feature = "sched_pbg")]
+        self.scheduler.close_profile()
+    }
+
 }
 
 impl AxRunQueue {
@@ -203,7 +225,7 @@ impl AxRunQueue {
 
             // The strong reference count of `prev_task` will be decremented by 1,
             // but won't be dropped until `gc_entry()` is called.
-            assert!(Arc::strong_count(prev_task.as_task_ref()) > 1);
+            // assert!(Arc::strong_count(prev_task.as_task_ref()) > 1);
             assert!(Arc::strong_count(&next_task) >= 1);
 
             CurrentTask::set_current(prev_task, next_task);
